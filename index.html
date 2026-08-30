@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Call Gamer - Voz, Chat e Telas (PC e Mobile)</title>
+    <title>Call Gamer - Voz, Chat, Telas e Amigos</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PeerJS para conexão P2P -->
@@ -17,7 +17,7 @@
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-[#5865f2] rounded-3xl mx-auto flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3">🎮</div>
                 <h1 id="auth-titulo" class="text-2xl font-bold text-white">Boas-vindas ao Call Gamer!</h1>
-                <p id="auth-sub" class="text-xs text-[#949ba4] mt-1">Conecte-se pelo PC ou Celular para jogar e conversar!</p>
+                <p id="auth-sub" class="text-xs text-[#949ba4] mt-1">Conecte-se com seus amigos e jogue em grupo!</p>
             </div>
 
             <div class="space-y-4">
@@ -26,7 +26,7 @@
                     <input id="auth-nome" type="text" placeholder="Seu apelido" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">E-mail ou Usuário</label>
+                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Usuário</label>
                     <input id="auth-usuario" type="text" placeholder="Nome de usuário" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
                 </div>
                 <div>
@@ -47,18 +47,18 @@
 
     <!-- APLICAÇÃO PRINCIPAL -->
     <div id="app-principal" class="hidden w-full h-full flex flex-col md:flex-row">
-        <!-- 1. Barra Lateral de Servidores -->
+        <!-- 1. Barra Lateral de Servidores / Amigos -->
         <nav class="w-full md:w-[72px] h-16 md:h-full bg-[#1e1f22] flex md:flex-col items-center justify-between md:justify-start py-2 md:py-3 px-4 md:px-0 md:space-y-3 shrink-0">
-            <div class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] rounded-2xl flex items-center justify-center text-white font-semibold text-xl cursor-pointer">🎮</div>
+            <div onclick="mudarParaChat()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white font-semibold text-xl cursor-pointer transition-all" title="Servidor / Comunidade">🎮</div>
+            <div onclick="mudarParaAmigos()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white text-xl cursor-pointer transition-all" title="Lista de Amigos">👥</div>
             <div class="hidden md:block w-8 h-[2px] bg-[#35363c] rounded"></div>
-            <div onclick="abrirModalComunidade()" class="w-12 h-12 bg-[#2b2d31] hover:bg-[#23a55a] rounded-2xl flex items-center justify-center text-[#23a55a] hover:text-white font-bold text-2xl cursor-pointer">+</div>
-            <div id="icone-comunidade-ativa" class="hidden md:flex w-12 h-12 bg-[#5865f2] rounded-2xl items-center justify-center text-white font-bold text-sm truncate px-1 text-center">PRV</div>
+            <div onclick="abrirModalComunidade()" class="w-12 h-12 bg-[#2b2d31] hover:bg-[#23a55a] hover:rounded-2xl rounded-3xl flex items-center justify-center text-[#23a55a] hover:text-white font-bold text-2xl cursor-pointer transition-all" title="Mudar Comunidade">+</div>
         </nav>
 
-        <!-- 2. Lista de Canais e Salas -->
-        <div class="w-full md:w-60 bg-[#2b2d31] flex flex-col shrink-0 border-r border-[#1f2023]">
+        <!-- 2. Lista de Canais e Salas (Visão de Servidor) -->
+        <div id="painel-canais" class="w-full md:w-60 bg-[#2b2d31] flex flex-col shrink-0 border-r border-[#1f2023]">
             <div class="h-12 border-b border-[#1f2023] px-4 flex items-center justify-between font-bold text-white shadow-sm">
-                <span id="nome-comunidade-header" class="truncate">Comunidade Call Gamer</span>
+                <span id="nome-comunidade-header" class="truncate">Call Gamer</span>
                 <span class="text-xs text-[#23a55a]" id="status-conexao">● Online</span>
             </div>
             
@@ -86,14 +86,13 @@
                     </div>
                 </div>
 
-                <!-- Controles Mobile / PC -->
                 <div class="mt-4 bg-[#1e1f22] p-2.5 rounded-lg space-y-2">
-                    <div class="text-xs font-bold text-[#949ba4] mb-1">ÁUDIO E CONVITE</div>
-                    <button onclick="alternarMicrofoneMute()" id="btn-mute" class="w-full bg-[#2b2d31] hover:bg-[#35373c] text-[#dbdee1] border border-[#3f4147] py-2 rounded text-xs font-bold transition-colors flex items-center justify-center space-x-1">
+                    <div class="text-xs font-bold text-[#949ba4] mb-1">CONTROLES</div>
+                    <button onclick="alternarMicrofoneMute()" id="btn-mute" class="w-full bg-[#2b2d31] hover:bg-[#35373c] text-[#dbdee1] border border-[#3f4147] py-2 rounded text-xs font-bold flex items-center justify-center space-x-1">
                         <span>🎙️</span>
                         <span id="txt-mute">Microfone Ativo</span>
                     </button>
-                    <button onclick="abrirModalConvite()" class="w-full bg-[#5865f2] hover:bg-[#4752c4] text-white py-2 rounded text-xs font-bold transition-colors flex items-center justify-center space-x-1">
+                    <button onclick="abrirModalConvite()" class="w-full bg-[#5865f2] hover:bg-[#4752c4] text-white py-2 rounded text-xs font-bold flex items-center justify-center space-x-1">
                         <span>🔗</span>
                         <span>Convidar Amigos</span>
                     </button>
@@ -102,21 +101,22 @@
 
             <div class="h-[52px] bg-[#232428] px-2 flex items-center justify-between">
                 <div class="flex items-center space-x-2 p-1 overflow-hidden">
-                    <div id="user-avatar-container" class="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
+                    <div id="user-avatar-container" class="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm shrink-0">
                         <span id="user-avatar-text">U</span>
                     </div>
                     <div class="leading-tight truncate">
                         <div id="user-name" class="text-sm font-bold text-white truncate">Usuário</div>
-                        <div class="text-[10px] text-[#23a55a] truncate">Conectado</div>
+                        <div class="text-[10px] text-[#23a55a] truncate">Online</div>
                     </div>
                 </div>
                 <button onclick="abrirConfiguracoes()" class="text-[#b5bac1] hover:text-white p-1.5 rounded hover:bg-[#35373c] text-lg">⚙️</button>
             </div>
         </div>
 
-        <!-- 3. Área Central (Chat e Voz) -->
+        <!-- 3. Área Principal (Alterna entre Chat e Painel de Amigos) -->
         <div class="flex-1 flex flex-col bg-[#313338] min-w-0">
-            <div class="h-12 border-b border-[#1f2023] px-4 flex items-center justify-between shadow-sm shrink-0">
+            <!-- TOPO DA COMUNIDADE -->
+            <div id="topo-chat" class="h-12 border-b border-[#1f2023] px-4 flex items-center justify-between shadow-sm shrink-0">
                 <div class="flex items-center truncate">
                     <span class="text-[#80848e] text-xl font-bold mr-2">#</span>
                     <span class="font-bold text-white mr-2 truncate">geral</span>
@@ -125,30 +125,49 @@
                 <button onclick="abrirModalConvite()" class="bg-[#23a55a] hover:bg-[#1f8c4c] text-xs text-white px-3 py-1.5 rounded font-medium">Convidar</button>
             </div>
 
-            <!-- Grade de Áudio/Vídeo Oculta para Voz (Fica rodando em background para reproduzir o som dos amigos) -->
-            <div id="grid-videos" class="hidden bg-[#111214] p-2 flex flex-wrap gap-2"></div>
-
-            <!-- Mensagens -->
-            <div id="chat-mensagens" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <div class="flex items-start space-x-4 px-2 py-1">
-                    <div class="w-10 h-10 rounded-full bg-[#23a55a] flex items-center justify-center text-white font-bold shrink-0">Bot</div>
-                    <div>
-                        <div class="flex items-baseline space-x-2">
-                            <span class="font-medium text-white">Sistema Call Gamer</span>
-                            <span class="text-xs text-[#949ba4]">Agora</span>
-                        </div>
-                        <p class="text-[#dbdee1] text-sm mt-0.5">Pronto para conversar entre PC e celular! Entre em uma sala de voz na barra lateral.</p>
+            <!-- TELA DE AMIGOS -->
+            <div id="painel-amigos" class="hidden flex-1 flex flex-col p-6 overflow-y-auto">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#3f4147] pb-4 mb-6 gap-3">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl">👥</span>
+                        <h2 class="text-white font-bold text-lg">Amigos</h2>
                     </div>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                        <input id="input-novo-amigo" type="text" placeholder="Nome de usuário exato" class="bg-[#1e1f22] text-white text-xs px-3 py-2 rounded border border-[#3f4147] focus:outline-none w-full sm:w-48" />
+                        <button onclick="adicionarAmigo()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs px-4 py-2 rounded font-bold transition-colors shrink-0">Adicionar Amigo</button>
+                    </div>
+                </div>
+
+                <div id="msg-amigo-feedback" class="text-xs mb-3 font-medium hidden"></div>
+
+                <div class="text-xs font-bold text-[#949ba4] uppercase tracking-wider mb-3">Lista de Amigos — <span id="contador-amigos">0</span></div>
+                <div id="lista-amigos-container" class="space-y-2">
+                    <!-- Amigos aparecem aqui -->
                 </div>
             </div>
 
-            <!-- Caixa de Texto -->
-            <div class="p-4 bg-[#313338] shrink-0">
-                <div class="bg-[#383a40] rounded-lg flex items-center px-4 py-2.5">
-                    <input id="input-mensagem" type="text" placeholder="Conversar na comunidade" 
-                           class="w-full bg-transparent text-[#dbdee1] placeholder-[#6d6f78] focus:outline-none text-sm" 
-                           onkeydown="if(event.key === 'Enter') enviarMensagem()" />
-                    <button onclick="enviarMensagem()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white px-4 py-1.5 rounded text-sm font-medium ml-2">Enviar</button>
+            <!-- CHAT DE TEXTO -->
+            <div id="conteudo-chat" class="flex-1 flex flex-col min-w-0">
+                <div id="chat-mensagens" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div class="flex items-start space-x-4 px-2 py-1">
+                        <div class="w-10 h-10 rounded-full bg-[#23a55a] flex items-center justify-center text-white font-bold shrink-0">Bot</div>
+                        <div>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="font-medium text-white">Sistema Call Gamer</span>
+                                <span class="text-xs text-[#949ba4]">Agora</span>
+                            </div>
+                            <p class="text-[#dbdee1] text-sm mt-0.5">Bem-vindo ao chat! Conecte-se com seus amigos na aba de amigos ou canais de voz.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-[#313338] shrink-0">
+                    <div class="bg-[#383a40] rounded-lg flex items-center px-4 py-2.5">
+                        <input id="input-mensagem" type="text" placeholder="Conversar na comunidade" 
+                               class="w-full bg-transparent text-[#dbdee1] placeholder-[#6d6f78] focus:outline-none text-sm" 
+                               onkeydown="if(event.key === 'Enter') enviarMensagem()" />
+                        <button onclick="enviarMensagem()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white px-4 py-1.5 rounded text-sm font-medium ml-2">Enviar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -158,7 +177,7 @@
     <div id="modal-convite" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
             <h2 class="text-white font-bold text-lg">Convidar Amigos</h2>
-            <p class="text-xs text-[#949ba4]">Envie este link para seus amigos entrarem pelo celular ou PC:</p>
+            <p class="text-xs text-[#949ba4]">Envie este link para seus amigos entrarem:</p>
             <input id="input-link-convite" type="text" readonly class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-xs font-mono" />
             <div class="flex justify-end space-x-2">
                 <button onclick="copiarLinkConvite()" class="bg-[#5865f2] text-white px-4 py-2 rounded text-xs font-bold">Copiar Link</button>
@@ -170,7 +189,7 @@
     <div id="modal-comunidade" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
             <h2 class="text-white font-bold text-lg">Mudar de Comunidade</h2>
-            <input id="input-nome-comunidade" type="text" placeholder="Nome da sala/comunidade" class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-sm font-mono" />
+            <input id="input-nome-comunidade" type="text" placeholder="Nome da comunidade" class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-sm font-mono" />
             <div class="flex justify-end space-x-2">
                 <button onclick="fecharModalComunidade()" class="text-white text-sm px-3">Cancelar</button>
                 <button onclick="entrarNaComunidade()" class="bg-[#23a55a] text-white px-5 py-2 rounded text-sm font-medium">Entrar</button>
@@ -200,16 +219,17 @@
         </div>
     </div>
 
-    <!-- Script Principal Otimizado para Mobile & PC -->
+    <!-- Script Principal -->
     <script>
         let modoRegistro = false;
-        let perfil = { nome: "", cor: "#5865f2", fotoUrl: null };
+        let perfil = { usuario: "", nome: "", cor: "#5865f2" };
         let comunidadeAtual = "CallGamer-Geral";
         let salaVozAtual = null;
         let peer = null;
         let conexoesAtivas = [];
         let streamLocalAudio = null;
         let microfoneMutado = false;
+        let listaAmigos = [];
 
         const urlParams = new URLSearchParams(window.location.search);
         const comunidadeConvite = urlParams.get('comunidade');
@@ -253,20 +273,26 @@
                     erroEl.classList.remove("hidden");
                     return;
                 }
-                usuariosSalvos[usuarioInput] = { senha: senhaInput, nome: nomeInput, cor: "#5865f2" };
-                localStorage.setItem("callgamer_usuarios", JSON.stringify(usuariosSalvos));
-                iniciarSessao(usuariosSalvos[usuarioInput]);
-            } else {
-                if (!usuariosSalvos[usuarioInput] || usuariosSalvos[usuarioInput].senha !== senhaInput) {
-                    erroEl.innerText = "Usuário ou senha incorretos.";
+                if (usuariosSalvos[usuarioInput]) {
+                    erroEl.innerText = "Este nome de usuário já está em uso.";
                     erroEl.classList.remove("hidden");
                     return;
                 }
-                iniciarSessao(usuariosSalvos[usuarioInput]);
+                usuariosSalvos[usuarioInput] = { senha: senhaInput, nome: nomeInput, cor: "#5865f2" };
+                localStorage.setItem("callgamer_usuarios", JSON.stringify(usuariosSalvos));
+                iniciarSessao(usuarioInput, usuariosSalvos[usuarioInput]);
+            } else {
+                if (!usuariosSalvos[usuarioInput] || usuariosSalvos[usuarioInput].senha !== senhaInput) {
+                    erroEl.innerText = "Usuário ou senha incorretos. Registre-se caso não tenha conta.";
+                    erroEl.classList.remove("hidden");
+                    return;
+                }
+                iniciarSessao(usuarioInput, usuariosSalvos[usuarioInput]);
             }
         }
 
-        function iniciarSessao(dadosUsuario) {
+        function iniciarSessao(idUsuario, dadosUsuario) {
+            perfil.usuario = idUsuario;
             perfil.nome = dadosUsuario.nome;
             perfil.cor = dadosUsuario.cor || "#5865f2";
 
@@ -278,9 +304,114 @@
             document.getElementById("user-avatar-container").style.backgroundColor = perfil.cor;
 
             document.getElementById("nome-comunidade-header").innerText = comunidadeAtual;
-            document.getElementById("icone-comunidade-ativa").innerText = comunidadeAtual.substring(0, 3).toUpperCase();
 
+            let salvos = localStorage.getItem(`callgamer_amigos_${perfil.usuario}`);
+            if (salvos) {
+                listaAmigos = JSON.parse(salvos);
+            }
+            atualizarInterfaceAmigos();
             inicializarPeerJS();
+        }
+
+        function mudarParaAmigos() {
+            document.getElementById("painel-canais").classList.add("hidden");
+            document.getElementById("topo-chat").classList.add("hidden");
+            document.getElementById("conteudo-chat").classList.add("hidden");
+            document.getElementById("painel-amigos").classList.remove("hidden");
+        }
+
+        function mudarParaChat() {
+            document.getElementById("painel-amigos").classList.add("hidden");
+            document.getElementById("painel-canais").classList.remove("hidden");
+            document.getElementById("topo-chat").classList.remove("hidden");
+            document.getElementById("conteudo-chat").classList.remove("hidden");
+        }
+
+        function adicionarAmigo() {
+            const input = document.getElementById("input-novo-amigo");
+            const usuarioBusca = input.value.trim().toLowerCase();
+            const feedbackEl = document.getElementById("msg-amigo-feedback");
+
+            feedbackEl.classList.remove("hidden");
+
+            if (!usuarioBusca) {
+                feedbackEl.innerText = "Digite o nome de usuário para buscar.";
+                feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
+                return;
+            }
+
+            if (usuarioBusca === perfil.usuario.toLowerCase()) {
+                feedbackEl.innerText = "Você não pode adicionar a si mesmo.";
+                feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
+                return;
+            }
+
+            let usuariosSalvos = JSON.parse(localStorage.getItem("callgamer_usuarios")) || {};
+            let usuarioEncontradoKey = Object.keys(usuariosSalvos).find(k => k.toLowerCase() === usuarioBusca);
+
+            if (!usuarioEncontradoKey) {
+                feedbackEl.innerText = "❌ Usuário inexistente.";
+                feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
+                return;
+            }
+
+            let dadosAmigo = usuariosSalvos[usuarioEncontradoKey];
+
+            if (listaAmigos.some(a => a.usuario.toLowerCase() === usuarioEncontradoKey.toLowerCase())) {
+                feedbackEl.innerText = "Este usuário já está na sua lista de amigos.";
+                feedbackEl.className = "text-xs mb-3 font-medium text-[#faa81a]";
+                return;
+            }
+
+            listaAmigos.push({ 
+                usuario: usuarioEncontradoKey, 
+                nome: dadosAmigo.nome, 
+                status: "Disponível para jogar" 
+            });
+
+            salvarAmigosNoStorage();
+            atualizarInterfaceAmigos();
+
+            feedbackEl.innerText = `✔️ ${dadosAmigo.nome} adicionado com sucesso!`;
+            feedbackEl.className = "text-xs mb-3 font-medium text-[#23a55a]";
+            input.value = "";
+        }
+
+        function removerAmigo(usuarioAmigo) {
+            listaAmigos = listaAmigos.filter(a => a.usuario !== usuarioAmigo);
+            salvarAmigosNoStorage();
+            atualizarInterfaceAmigos();
+        }
+
+        function salvarAmigosNoStorage() {
+            localStorage.setItem(`callgamer_amigos_${perfil.usuario}`, JSON.stringify(listaAmigos));
+        }
+
+        function atualizarInterfaceAmigos() {
+            const container = document.getElementById("lista-amigos-container");
+            document.getElementById("contador-amigos").innerText = listaAmigos.length;
+            container.innerHTML = "";
+
+            if (listaAmigos.length === 0) {
+                container.innerHTML = `<p class="text-xs text-[#949ba4]">Nenhum amigo adicionado ainda. Digite o nome de usuário exato acima!</p>`;
+                return;
+            }
+
+            listaAmigos.forEach(amigo => {
+                const div = document.createElement("div");
+                div.className = "flex items-center justify-between p-2.5 bg-[#2b2d31] rounded-lg border border-[#3f4147]";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm">${amigo.nome.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="text-sm font-medium text-white">${amigo.nome} <span class="text-xs text-[#949ba4]">(@${amigo.usuario})</span></div>
+                            <div class="text-[10px] text-[#23a55a]">${amigo.status}</div>
+                        </div>
+                    </div>
+                    <button onclick="removerAmigo('${amigo.usuario}')" class="text-xs bg-[#ed4245]/20 text-[#ed4245] hover:bg-[#ed4245] hover:text-white px-3 py-1 rounded transition-colors font-medium">Remover</button>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function inicializarPeerJS() {
@@ -298,14 +429,10 @@
                         streamLocalAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                     }
                     call.answer(streamLocalAudio);
-                    call.on('stream', (streamRemoto) => {
-                        reproduzirAudioRemoto(streamRemoto, call.peer);
-                    });
+                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto, call.peer));
                 } catch (e) {
                     call.answer();
-                    call.on('stream', (streamRemoto) => {
-                        reproduzirAudioRemoto(streamRemoto, call.peer);
-                    });
+                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto, call.peer));
                 }
             });
         }
@@ -320,9 +447,7 @@
                 document.body.appendChild(audioEl);
             }
             audioEl.srcObject = stream;
-            audioEl.play().catch(() => {
-                console.log("Clique necessário na tela para liberar o áudio no celular.");
-            });
+            audioEl.play().catch(() => {});
         }
 
         async function entrarSalaVoz(nomeSala) {
@@ -341,7 +466,7 @@
                     }
                 });
             } catch (e) {
-                alert("Permissão de microfone negada ou indisponível no dispositivo.");
+                alert("Microfone indisponível ou negado.");
             }
         }
 
@@ -371,7 +496,7 @@
                 conexoesAtivas.push(conexao);
             }
             conexao.on('open', () => {
-                adicionarSistemaMensagem(`Novo amigo conectado!`);
+                adicionarSistemaMensagem(`Novo amigo conectado à comunidade!`);
             });
             conexao.on('data', (dados) => {
                 if (dados.tipo === 'chat') adicionarMensagemNaTela(dados);
