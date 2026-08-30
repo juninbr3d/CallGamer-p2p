@@ -3,43 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Call Gamer - Voz, Chat, Telas e Amigos</title>
+    <title>Call Gamer - Nuvem</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS para conexão P2P -->
+    <!-- PeerJS para Voz -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==========================================
+        // COLE SUAS CONFIGURAÇÕES DO FIREBASE AQUI:
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "callgamer.firebaseapp.com",
+            authDomain: "callgamer.firebaseapp.com",
+            projectId: "callgamer",
+            storageBucket: "callgamer.firebasestorage.app",
+            messagingSenderId: "70326515600",
+            appId: "1:70326515600:web:d80314c7a27845db21e515"
+            measurementId: "G-49EHH7TD38"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Disponibilizar variáveis globalmente no script da página
+        window.db = db;
+        window.firebaseFns = { collection, doc, setDoc, getDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot };
+        window.appProntoParaUso();
+    </script>
 </head>
 <body class="bg-[#313338] text-[#dbdee1] h-screen overflow-hidden flex font-sans select-none">
 
-    <!-- TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
+    <!-- TELA DE AUTENTICAÇÃO -->
     <div id="tela-auth" class="fixed inset-0 bg-[#1e1f22] z-50 flex items-center justify-center p-4">
         <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-8 flex flex-col border border-[#3f4147]">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-[#5865f2] rounded-3xl mx-auto flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-3">🎮</div>
-                <h1 id="auth-titulo" class="text-2xl font-bold text-white">Boas-vindas ao Call Gamer!</h1>
-                <p id="auth-sub" class="text-xs text-[#949ba4] mt-1">Conecte-se com seus amigos e jogue em grupo!</p>
+                <h1 id="auth-titulo" class="text-2xl font-bold text-white">Call Gamer Nuvem</h1>
+                <p id="auth-sub" class="text-xs text-[#949ba4] mt-1">Conecte-se com amigos de qualquer lugar do mundo!</p>
             </div>
 
             <div class="space-y-4">
                 <div id="campo-nome-container" class="hidden">
-                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Apelido / Nome de Usuário</label>
-                    <input id="auth-nome" type="text" placeholder="Seu apelido" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
+                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Seu Nome / Apelido</label>
+                    <input id="auth-nome" type="text" placeholder="Nome visível" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Usuário</label>
-                    <input id="auth-usuario" type="text" placeholder="Nome de usuário" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
+                    <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Nome de Usuário (Único)</label>
+                    <input id="auth-usuario" type="text" placeholder="ex: joaogamer" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
                 </div>
                 <div>
                     <label class="text-xs font-bold text-[#949ba4] uppercase block mb-2">Senha</label>
-                    <input id="auth-senha" type="password" placeholder="Sua senha secreta" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
+                    <input id="auth-senha" type="password" placeholder="Senha secreta" class="w-full bg-[#1e1f22] text-white p-3 rounded border border-[#3f4147] focus:outline-none text-sm" />
                 </div>
                 <div id="erro-auth" class="text-xs text-[#ed4245] font-medium hidden"></div>
 
                 <button onclick="executarAutenticacao()" id="btn-auth-submit" class="w-full bg-[#5865f2] hover:bg-[#4752c4] text-white p-3 rounded font-medium transition-colors text-sm">Entrar</button>
 
                 <div class="text-xs text-[#949ba4] text-center mt-2">
-                    <span id="auth-alternar-txt">Precisando de uma conta?</span>
-                    <span onclick="alternarModoAuth()" id="auth-alternar-link" class="text-[#00a8fc] hover:underline cursor-pointer font-medium ml-1">Registre-se</span>
+                    <span id="auth-alternar-txt">Não tem uma conta?</span>
+                    <span onclick="alternarModoAuth()" id="auth-alternar-link" class="text-[#00a8fc] hover:underline cursor-pointer font-medium ml-1">Criar conta</span>
                 </div>
             </div>
         </div>
@@ -47,36 +73,23 @@
 
     <!-- APLICAÇÃO PRINCIPAL -->
     <div id="app-principal" class="hidden w-full h-full flex flex-col md:flex-row">
-        <!-- 1. Barra Lateral de Servidores / Amigos -->
+        <!-- Barra Lateral -->
         <nav class="w-full md:w-[72px] h-16 md:h-full bg-[#1e1f22] flex md:flex-col items-center justify-between md:justify-start py-2 md:py-3 px-4 md:px-0 md:space-y-3 shrink-0">
-            <div onclick="mudarParaChat()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white font-semibold text-xl cursor-pointer transition-all" title="Servidor / Comunidade">🎮</div>
-            <div onclick="mudarParaAmigos()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white text-xl cursor-pointer transition-all" title="Lista de Amigos">👥</div>
-            <div class="hidden md:block w-8 h-[2px] bg-[#35363c] rounded"></div>
-            <div onclick="abrirModalComunidade()" class="w-12 h-12 bg-[#2b2d31] hover:bg-[#23a55a] hover:rounded-2xl rounded-3xl flex items-center justify-center text-[#23a55a] hover:text-white font-bold text-2xl cursor-pointer transition-all" title="Mudar Comunidade">+</div>
+            <div onclick="mudarParaChat()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white font-semibold text-xl cursor-pointer transition-all" title="Comunidade">🎮</div>
+            <div onclick="mudarParaAmigos()" class="w-12 h-12 bg-[#313338] hover:bg-[#5865f2] hover:rounded-2xl rounded-3xl flex items-center justify-center text-white text-xl cursor-pointer transition-all" title="Amigos">👥</div>
         </nav>
 
-        <!-- 2. Lista de Canais e Salas (Visão de Servidor) -->
+        <!-- Canais -->
         <div id="painel-canais" class="w-full md:w-60 bg-[#2b2d31] flex flex-col shrink-0 border-r border-[#1f2023]">
             <div class="h-12 border-b border-[#1f2023] px-4 flex items-center justify-between font-bold text-white shadow-sm">
-                <span id="nome-comunidade-header" class="truncate">Call Gamer</span>
-                <span class="text-xs text-[#23a55a]" id="status-conexao">● Online</span>
+                <span class="truncate">Call Gamer Cloud</span>
+                <span class="text-xs text-[#23a55a]" id="status-conexao">● Nuvem OK</span>
             </div>
             
             <div class="flex-1 overflow-y-auto px-2 py-3 space-y-4">
                 <div>
-                    <div class="text-xs font-bold text-[#949ba4] px-2 mb-1 uppercase tracking-wider">Canais de Texto</div>
-                    <div class="px-2 py-1.5 rounded bg-[#404249] text-white flex items-center space-x-2">
-                        <span class="text-[#80848e] font-bold">#</span>
-                        <span class="font-medium text-sm">geral</span>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between px-2 mb-1">
-                        <span class="text-xs font-bold text-[#949ba4] uppercase tracking-wider">Canais de Voz</span>
-                        <button onclick="abrirModalCriarSalaVoz()" class="text-[#949ba4] hover:text-white font-bold text-base">+</button>
-                    </div>
-                    <div id="lista-salas-voz" class="space-y-1">
+                    <div class="text-xs font-bold text-[#949ba4] px-2 mb-1 uppercase tracking-wider">Canais de Voz</div>
+                    <div class="space-y-1">
                         <div onclick="entrarSalaVoz('Geral (Voz)')" class="px-2 py-2 rounded hover:bg-[#35373c] text-[#949ba4] hover:text-white flex items-center justify-between cursor-pointer transition-colors">
                             <div class="flex items-center space-x-2 truncate">
                                 <span>🔊</span>
@@ -92,10 +105,6 @@
                         <span>🎙️</span>
                         <span id="txt-mute">Microfone Ativo</span>
                     </button>
-                    <button onclick="abrirModalConvite()" class="w-full bg-[#5865f2] hover:bg-[#4752c4] text-white py-2 rounded text-xs font-bold flex items-center justify-center space-x-1">
-                        <span>🔗</span>
-                        <span>Convidar Amigos</span>
-                    </button>
                 </div>
             </div>
 
@@ -106,26 +115,23 @@
                     </div>
                     <div class="leading-tight truncate">
                         <div id="user-name" class="text-sm font-bold text-white truncate">Usuário</div>
-                        <div class="text-[10px] text-[#23a55a] truncate">Online</div>
+                        <div class="text-[10px] text-[#23a55a] truncate">Online na Nuvem</div>
                     </div>
                 </div>
-                <button onclick="abrirConfiguracoes()" class="text-[#b5bac1] hover:text-white p-1.5 rounded hover:bg-[#35373c] text-lg">⚙️</button>
             </div>
         </div>
 
-        <!-- 3. Área Principal (Alterna entre Chat e Painel de Amigos) -->
+        <!-- Área Principal -->
         <div class="flex-1 flex flex-col bg-[#313338] min-w-0">
-            <!-- TOPO DA COMUNIDADE -->
             <div id="topo-chat" class="h-12 border-b border-[#1f2023] px-4 flex items-center justify-between shadow-sm shrink-0">
                 <div class="flex items-center truncate">
                     <span class="text-[#80848e] text-xl font-bold mr-2">#</span>
                     <span class="font-bold text-white mr-2 truncate">geral</span>
                     <span class="text-xs text-[#949ba4] hidden sm:inline border-l border-[#3f4147] pl-3">Sala Voz: <strong id="lbl-sala-atual" class="text-[#23a55a]">Nenhuma</strong></span>
                 </div>
-                <button onclick="abrirModalConvite()" class="bg-[#23a55a] hover:bg-[#1f8c4c] text-xs text-white px-3 py-1.5 rounded font-medium">Convidar</button>
             </div>
 
-            <!-- TELA DE AMIGOS -->
+            <!-- PAINEL DE AMIGOS (Agora totalmente integrado na nuvem!) -->
             <div id="painel-amigos" class="hidden flex-1 flex flex-col p-6 overflow-y-auto">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#3f4147] pb-4 mb-6 gap-3">
                     <div class="flex items-center space-x-3">
@@ -134,106 +140,58 @@
                     </div>
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                         <input id="input-novo-amigo" type="text" placeholder="Nome de usuário exato" class="bg-[#1e1f22] text-white text-xs px-3 py-2 rounded border border-[#3f4147] focus:outline-none w-full sm:w-48" />
-                        <button onclick="adicionarAmigo()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs px-4 py-2 rounded font-bold transition-colors shrink-0">Adicionar Amigo</button>
+                        <button onclick="adicionarAmigoNaNuvem()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs px-4 py-2 rounded font-bold transition-colors shrink-0">Adicionar Amigo</button>
                     </div>
                 </div>
 
                 <div id="msg-amigo-feedback" class="text-xs mb-3 font-medium hidden"></div>
 
-                <div class="text-xs font-bold text-[#949ba4] uppercase tracking-wider mb-3">Lista de Amigos — <span id="contador-amigos">0</span></div>
+                <div class="text-xs font-bold text-[#949ba4] uppercase tracking-wider mb-3">Sua Lista de Amigos</div>
                 <div id="lista-amigos-container" class="space-y-2">
-                    <!-- Amigos aparecem aqui -->
+                    <!-- Amigos salvos no Firestore aparecem aqui -->
                 </div>
             </div>
 
-            <!-- CHAT DE TEXTO -->
+            <!-- CHAT -->
             <div id="conteudo-chat" class="flex-1 flex flex-col min-w-0">
                 <div id="chat-mensagens" class="flex-1 overflow-y-auto p-4 space-y-4">
                     <div class="flex items-start space-x-4 px-2 py-1">
                         <div class="w-10 h-10 rounded-full bg-[#23a55a] flex items-center justify-center text-white font-bold shrink-0">Bot</div>
                         <div>
                             <div class="flex items-baseline space-x-2">
-                                <span class="font-medium text-white">Sistema Call Gamer</span>
+                                <span class="font-medium text-white">Sistema Nuvem</span>
                                 <span class="text-xs text-[#949ba4]">Agora</span>
                             </div>
-                            <p class="text-[#dbdee1] text-sm mt-0.5">Bem-vindo ao chat! Conecte-se com seus amigos na aba de amigos ou canais de voz.</p>
+                            <p class="text-[#dbdee1] text-sm mt-0.5">Bem-vindo ao Call Gamer conectado via Firebase! Adicione amigos na aba lateral e converse por voz.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="p-4 bg-[#313338] shrink-0">
                     <div class="bg-[#383a40] rounded-lg flex items-center px-4 py-2.5">
-                        <input id="input-mensagem" type="text" placeholder="Conversar na comunidade" 
+                        <input id="input-mensagem" type="text" placeholder="Conversar com a sala de voz" 
                                class="w-full bg-transparent text-[#dbdee1] placeholder-[#6d6f78] focus:outline-none text-sm" 
-                               onkeydown="if(event.key === 'Enter') enviarMensagem()" />
-                        <button onclick="enviarMensagem()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white px-4 py-1.5 rounded text-sm font-medium ml-2">Enviar</button>
+                               onkeydown="if(event.key === 'Enter') enviarMensagemChat()" />
+                        <button onclick="enviarMensagemChat()" class="bg-[#5865f2] hover:bg-[#4752c4] text-white px-4 py-1.5 rounded text-sm font-medium ml-2">Enviar</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modais -->
-    <div id="modal-convite" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
-            <h2 class="text-white font-bold text-lg">Convidar Amigos</h2>
-            <p class="text-xs text-[#949ba4]">Envie este link para seus amigos entrarem:</p>
-            <input id="input-link-convite" type="text" readonly class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-xs font-mono" />
-            <div class="flex justify-end space-x-2">
-                <button onclick="copiarLinkConvite()" class="bg-[#5865f2] text-white px-4 py-2 rounded text-xs font-bold">Copiar Link</button>
-                <button onclick="fecharModalConvite()" class="bg-[#2b2d31] text-white px-4 py-2 rounded text-xs">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-comunidade" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
-            <h2 class="text-white font-bold text-lg">Mudar de Comunidade</h2>
-            <input id="input-nome-comunidade" type="text" placeholder="Nome da comunidade" class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-sm font-mono" />
-            <div class="flex justify-end space-x-2">
-                <button onclick="fecharModalComunidade()" class="text-white text-sm px-3">Cancelar</button>
-                <button onclick="entrarNaComunidade()" class="bg-[#23a55a] text-white px-5 py-2 rounded text-sm font-medium">Entrar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-voz" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
-            <h2 class="text-white font-bold text-lg">Criar Sala de Voz</h2>
-            <input id="input-nome-voz" type="text" placeholder="Ex: Duo Squad" class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-sm" />
-            <div class="flex justify-end space-x-2">
-                <button onclick="fecharModalCriarSalaVoz()" class="text-white text-sm px-3">Cancelar</button>
-                <button onclick="criarSalaVoz()" class="bg-[#5865f2] text-white px-5 py-2 rounded text-sm font-medium">Criar e Entrar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-config" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-[#313338] w-full max-w-md rounded-lg shadow-2xl p-6 space-y-4 border border-[#3f4147]">
-            <h2 class="text-white font-bold text-lg">Configurações de Perfil</h2>
-            <input id="input-novo-nome" type="text" placeholder="Seu apelido" class="w-full bg-[#1e1f22] text-white p-2.5 rounded border border-[#3f4147] text-sm" />
-            <div class="flex justify-end space-x-2">
-                <button onclick="fecharConfiguracoes()" class="text-white text-sm px-3">Cancelar</button>
-                <button onclick="salvarConfiguracoes()" class="bg-[#5865f2] text-white px-5 py-2 rounded text-sm font-medium">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script Principal -->
+    <!-- Script de lógica da aplicação -->
     <script>
         let modoRegistro = false;
-        let perfil = { usuario: "", nome: "", cor: "#5865f2" };
-        let comunidadeAtual = "CallGamer-Geral";
-        let salaVozAtual = null;
+        let perfil = { usuario: "", nome: "" };
         let peer = null;
         let conexoesAtivas = [];
         let streamLocalAudio = null;
         let microfoneMutado = false;
-        let listaAmigos = [];
+        let salaVozAtual = null;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const comunidadeConvite = urlParams.get('comunidade');
-        if (comunidadeConvite) comunidadeAtual = decodeURIComponent(comunidadeConvite);
+        window.appProntoParaUso = function() {
+            console.log("Firebase conectado com sucesso!");
+        }
 
         function alternarModoAuth() {
             modoRegistro = !modoRegistro;
@@ -241,20 +199,20 @@
             if (modoRegistro) {
                 document.getElementById("auth-titulo").innerText = "Criar conta no Call Gamer";
                 document.getElementById("campo-nome-container").classList.remove("hidden");
-                document.getElementById("btn-auth-submit").innerText = "Continuar";
+                document.getElementById("btn-auth-submit").innerText = "Cadastrar";
                 document.getElementById("auth-alternar-txt").innerText = "Já tem uma conta?";
-                document.getElementById("auth-alternar-link").innerText = "Entre";
+                document.getElementById("auth-alternar-link").innerText = "Entrar";
             } else {
-                document.getElementById("auth-titulo").innerText = "Boas-vindas ao Call Gamer!";
+                document.getElementById("auth-titulo").innerText = "Call Gamer Nuvem";
                 document.getElementById("campo-nome-container").classList.add("hidden");
                 document.getElementById("btn-auth-submit").innerText = "Entrar";
-                document.getElementById("auth-alternar-txt").innerText = "Precisando de uma conta?";
-                document.getElementById("auth-alternar-link").innerText = "Registre-se";
+                document.getElementById("auth-alternar-txt").innerText = "Não tem uma conta?";
+                document.getElementById("auth-alternar-link").innerText = "Criar conta";
             }
         }
 
-        function executarAutenticacao() {
-            const usuarioInput = document.getElementById("auth-usuario").value.trim();
+        async function executarAutenticacao() {
+            const usuarioInput = document.getElementById("auth-usuario").value.trim().toLowerCase();
             const senhaInput = document.getElementById("auth-senha").value.trim();
             const erroEl = document.getElementById("erro-auth");
 
@@ -264,53 +222,48 @@
                 return;
             }
 
-            let usuariosSalvos = JSON.parse(localStorage.getItem("callgamer_usuarios")) || {};
+            const { doc, getDoc, setDoc } = window.firebaseFns;
+            const docRef = doc(window.db, "usuarios", usuarioInput);
+            const docSnap = await getDoc(docRef);
 
             if (modoRegistro) {
                 const nomeInput = document.getElementById("auth-nome").value.trim();
                 if (!nomeInput) {
-                    erroEl.innerText = "Informe seu apelido.";
+                    erroEl.innerText = "Informe seu nome visível.";
                     erroEl.classList.remove("hidden");
                     return;
                 }
-                if (usuariosSalvos[usuarioInput]) {
-                    erroEl.innerText = "Este nome de usuário já está em uso.";
+                if (docSnap.exists()) {
+                    erroEl.innerText = "Este nome de usuário já existe na nuvem.";
                     erroEl.classList.remove("hidden");
                     return;
                 }
-                usuariosSalvos[usuarioInput] = { senha: senhaInput, nome: nomeInput, cor: "#5865f2" };
-                localStorage.setItem("callgamer_usuarios", JSON.stringify(usuariosSalvos));
-                iniciarSessao(usuarioInput, usuariosSalvos[usuarioInput]);
+
+                const novoUsuario = { senha: senhaInput, nome: nomeInput, amigos: [] };
+                await setDoc(docRef, novoUsuario);
+                iniciarSessao(usuarioInput, novoUsuario);
             } else {
-                if (!usuariosSalvos[usuarioInput] || usuariosSalvos[usuarioInput].senha !== senhaInput) {
-                    erroEl.innerText = "Usuário ou senha incorretos. Registre-se caso não tenha conta.";
+                if (!docSnap.exists() || docSnap.data().senha !== senhaInput) {
+                    erroEl.innerText = "Usuário ou senha incorretos.";
                     erroEl.classList.remove("hidden");
                     return;
                 }
-                iniciarSessao(usuarioInput, usuariosSalvos[usuarioInput]);
+                iniciarSessao(usuarioInput, docSnap.data());
             }
         }
 
-        function iniciarSessao(idUsuario, dadosUsuario) {
-            perfil.usuario = idUsuario;
-            perfil.nome = dadosUsuario.nome;
-            perfil.cor = dadosUsuario.cor || "#5865f2";
+        function iniciarSessao(usuario, dados) {
+            perfil.usuario = usuario;
+            perfil.nome = dados.nome;
 
             document.getElementById("tela-auth").classList.add("hidden");
             document.getElementById("app-principal").classList.remove("hidden");
 
             document.getElementById("user-name").innerText = perfil.nome;
             document.getElementById("user-avatar-text").innerText = perfil.nome.charAt(0).toUpperCase();
-            document.getElementById("user-avatar-container").style.backgroundColor = perfil.cor;
 
-            document.getElementById("nome-comunidade-header").innerText = comunidadeAtual;
-
-            let salvos = localStorage.getItem(`callgamer_amigos_${perfil.usuario}`);
-            if (salvos) {
-                listaAmigos = JSON.parse(salvos);
-            }
-            atualizarInterfaceAmigos();
-            inicializarPeerJS();
+            inicializarPeerJSNaNuvem();
+            escutarAtualizacoesAmigos();
         }
 
         function mudarParaAmigos() {
@@ -327,147 +280,157 @@
             document.getElementById("conteudo-chat").classList.remove("hidden");
         }
 
-        function adicionarAmigo() {
+        async function adicionarAmigoNaNuvem() {
             const input = document.getElementById("input-novo-amigo");
-            const usuarioBusca = input.value.trim().toLowerCase();
+            const amigoBusca = input.value.trim().toLowerCase();
             const feedbackEl = document.getElementById("msg-amigo-feedback");
-
             feedbackEl.classList.remove("hidden");
 
-            if (!usuarioBusca) {
-                feedbackEl.innerText = "Digite o nome de usuário para buscar.";
+            if (!amigoBusca) {
+                feedbackEl.innerText = "Digite o nome de usuário.";
                 feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
                 return;
             }
-
-            if (usuarioBusca === perfil.usuario.toLowerCase()) {
+            if (amigoBusca === perfil.usuario) {
                 feedbackEl.innerText = "Você não pode adicionar a si mesmo.";
                 feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
                 return;
             }
 
-            let usuariosSalvos = JSON.parse(localStorage.getItem("callgamer_usuarios")) || {};
-            let usuarioEncontradoKey = Object.keys(usuariosSalvos).find(k => k.toLowerCase() === usuarioBusca);
+            const { doc, getDoc, updateDoc, arrayUnion } = window.firebaseFns;
+            const amigoRef = doc(window.db, "usuarios", amigoBusca);
+            const amigoSnap = await getDoc(amigoRef);
 
-            if (!usuarioEncontradoKey) {
-                feedbackEl.innerText = "❌ Usuário inexistente.";
+            if (!amigoSnap.exists()) {
+                feedbackEl.innerText = "❌ Usuário não encontrado na nuvem.";
                 feedbackEl.className = "text-xs mb-3 font-medium text-[#ed4245]";
                 return;
             }
 
-            let dadosAmigo = usuariosSalvos[usuarioEncontradoKey];
-
-            if (listaAmigos.some(a => a.usuario.toLowerCase() === usuarioEncontradoKey.toLowerCase())) {
-                feedbackEl.innerText = "Este usuário já está na sua lista de amigos.";
-                feedbackEl.className = "text-xs mb-3 font-medium text-[#faa81a]";
-                return;
-            }
-
-            listaAmigos.push({ 
-                usuario: usuarioEncontradoKey, 
-                nome: dadosAmigo.nome, 
-                status: "Disponível para jogar" 
+            const meuRef = doc(window.db, "usuarios", perfil.usuario);
+            await updateDoc(meuRef, {
+                amigos: arrayUnion(amigoBusca)
             });
 
-            salvarAmigosNoStorage();
-            atualizarInterfaceAmigos();
-
-            feedbackEl.innerText = `✔️ ${dadosAmigo.nome} adicionado com sucesso!`;
+            feedbackEl.innerText = `✔️ Amigo ${amigoSnap.data().nome} adicionado com sucesso!`;
             feedbackEl.className = "text-xs mb-3 font-medium text-[#23a55a]";
             input.value = "";
         }
 
-        function removerAmigo(usuarioAmigo) {
-            listaAmigos = listaAmigos.filter(a => a.usuario !== usuarioAmigo);
-            salvarAmigosNoStorage();
-            atualizarInterfaceAmigos();
+        function escutarAtualizacoesAmigos() {
+            const { doc, onSnapshot } = window.firebaseFns;
+            onSnapshot(doc(window.db, "usuarios", perfil.usuario), (docSnap) => {
+                if (docSnap.exists()) {
+                    const dados = docSnap.data();
+                    atualizarInterfaceAmigos(dados.amigos || []);
+                }
+            });
         }
 
-        function salvarAmigosNoStorage() {
-            localStorage.setItem(`callgamer_amigos_${perfil.usuario}`, JSON.stringify(listaAmigos));
-        }
-
-        function atualizarInterfaceAmigos() {
+        async function atualizarInterfaceAmigos(amigosLista) {
             const container = document.getElementById("lista-amigos-container");
-            document.getElementById("contador-amigos").innerText = listaAmigos.length;
             container.innerHTML = "";
 
-            if (listaAmigos.length === 0) {
-                container.innerHTML = `<p class="text-xs text-[#949ba4]">Nenhum amigo adicionado ainda. Digite o nome de usuário exato acima!</p>`;
+            if (amigosLista.length === 0) {
+                container.innerHTML = `<p class="text-xs text-[#949ba4]">Nenhum amigo adicionado ainda.</p>`;
                 return;
             }
 
-            listaAmigos.forEach(amigo => {
+            const { doc, getDoc } = window.firebaseFns;
+
+            for (let amigoUser of amigosLista) {
+                const snap = await getDoc(doc(window.db, "usuarios", amigoUser));
+                const nomeAmigo = snap.exists() ? snap.data().nome : amigoUser;
+
                 const div = document.createElement("div");
                 div.className = "flex items-center justify-between p-2.5 bg-[#2b2d31] rounded-lg border border-[#3f4147]";
                 div.innerHTML = `
                     <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm">${amigo.nome.charAt(0).toUpperCase()}</div>
+                        <div class="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm">${nomeAmigo.charAt(0).toUpperCase()}</div>
                         <div>
-                            <div class="text-sm font-medium text-white">${amigo.nome} <span class="text-xs text-[#949ba4]">(@${amigo.usuario})</span></div>
-                            <div class="text-[10px] text-[#23a55a]">${amigo.status}</div>
+                            <div class="text-sm font-medium text-white">${nomeAmigo} <span class="text-xs text-[#949ba4]">(@${amigoUser})</span></div>
+                            <div class="text-[10px] text-[#23a55a]">Disponível</div>
                         </div>
                     </div>
-                    <button onclick="removerAmigo('${amigo.usuario}')" class="text-xs bg-[#ed4245]/20 text-[#ed4245] hover:bg-[#ed4245] hover:text-white px-3 py-1 rounded transition-colors font-medium">Remover</button>
+                    <button onclick="conectarComAmigo('${amigoUser}')" class="text-xs bg-[#23a55a] text-white px-3 py-1 rounded font-medium hover:bg-[#1f8c4c]">Ligar / Conectar</button>
                 `;
                 container.appendChild(div);
-            });
+            }
         }
 
-        function inicializarPeerJS() {
-            peer = new Peer();
-            peer.on('open', () => {
-                document.getElementById("status-conexao").innerText = "● Online";
-                conectarComunidadeP2P(comunidadeAtual);
+        function inicializarPeerJSNaNuvem() {
+            // Usamos o nome de usuário único como ID do PeerJS para facilitar ligações diretas!
+            peer = new Peer("callgamer_" + perfil.usuario);
+
+            peer.on('open', (id) => {
+                document.getElementById("status-conexao").innerText = "● Conectado (Nuvem)";
             });
+
             peer.on('connection', (conexao) => {
-                configurarConexaoChat(conexao);
+                configurarConexaoDados(conexao);
             });
+
             peer.on('call', async (call) => {
                 try {
                     if (!streamLocalAudio) {
                         streamLocalAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                     }
                     call.answer(streamLocalAudio);
-                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto, call.peer));
+                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto));
                 } catch (e) {
                     call.answer();
-                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto, call.peer));
+                    call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto));
                 }
             });
         }
 
-        function reproduzirAudioRemoto(stream, peerId) {
-            let audioEl = document.getElementById(`audio-${peerId}`);
+        function conectarComAmigo(usuarioAmigo) {
+            let peerIdDestino = "callgamer_" + usuarioAmigo;
+            const conexao = peer.connect(peerIdDestino);
+            configurarConexaoDados(conexao);
+            
+            // Tenta ligar a voz também
+            if (streamLocalAudio) {
+                const call = peer.call(peerIdDestino, streamLocalAudio);
+                call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto));
+            }
+            alert(`Conectando com @${usuarioAmigo}!`);
+        }
+
+        function configurarConexaoDados(conexao) {
+            if (!conexoesAtivas.some(c => c.peer === conexao.peer)) {
+                conexoesAtivas.push(conexao);
+            }
+            conexao.on('data', (dados) => {
+                if (dados.tipo === 'chat') adicionarMensagemNaTela(dados);
+            });
+        }
+
+        async function entrarSalaVoz(nomeSala) {
+            salaVozAtual = nomeSala;
+            document.getElementById("lbl-sala-atual").innerText = salaVozAtual;
+            adicionarSistemaMensagem(`Entrou na sala de voz: ${nomeSala}`);
+
+            try {
+                if (!streamLocalAudio) {
+                    streamLocalAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                }
+            } catch (e) {
+                alert("Permissão de microfone negada.");
+            }
+        }
+
+        function reproduzirAudioRemoto(stream) {
+            let audioEl = document.getElementById("audio-remoto");
             if (!audioEl) {
                 audioEl = document.createElement("audio");
-                audioEl.id = `audio-${peerId}`;
+                audioEl.id = "audio-remoto";
                 audioEl.autoplay = true;
                 audioEl.playsInline = true;
                 document.body.appendChild(audioEl);
             }
             audioEl.srcObject = stream;
             audioEl.play().catch(() => {});
-        }
-
-        async function entrarSalaVoz(nomeSala) {
-            salaVozAtual = nomeSala;
-            document.getElementById("lbl-sala-atual").innerText = salaVozAtual;
-            adicionarSistemaMensagem(`Conectado à voz: [${salaVozAtual}]`);
-
-            try {
-                if (!streamLocalAudio) {
-                    streamLocalAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                }
-                conexoesAtivas.forEach(conn => {
-                    if (conn.open) {
-                        const call = peer.call(conn.peer, streamLocalAudio);
-                        call.on('stream', (streamRemoto) => reproduzirAudioRemoto(streamRemoto, conn.peer));
-                    }
-                });
-            } catch (e) {
-                alert("Microfone indisponível ou negado.");
-            }
         }
 
         function alternarMicrofoneMute() {
@@ -485,39 +448,20 @@
             }
         }
 
-        function conectarComunidadeP2P(nomeComunidade) {
-            let idSalaUnico = "callgamer_comunidade_" + btoa(encodeURIComponent(nomeComunidade)).replace(/=/g, "");
-            const conexao = peer.connect(idSalaUnico);
-            configurarConexaoChat(conexao);
-        }
-
-        function configurarConexaoChat(conexao) {
-            if (!conexoesAtivas.some(c => c.peer === conexao.peer)) {
-                conexoesAtivas.push(conexao);
-            }
-            conexao.on('open', () => {
-                adicionarSistemaMensagem(`Novo amigo conectado à comunidade!`);
-            });
-            conexao.on('data', (dados) => {
-                if (dados.tipo === 'chat') adicionarMensagemNaTela(dados);
-            });
-        }
-
-        function enviarMensagem() {
+        function enviarMensagemChat() {
             const input = document.getElementById("input-mensagem");
             const texto = input.value.trim();
             if (texto !== "") {
-                const dadosMensagem = {
+                const dadosMsg = {
                     tipo: 'chat',
                     usuario: perfil.nome,
-                    cor: perfil.cor,
                     conteudo: texto,
                     horario: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 };
                 conexoesAtivas.forEach(conn => {
-                    if (conn.open) conn.send(dadosMensagem);
+                    if (conn.open) conn.send(dadosMsg);
                 });
-                adicionarMensagemNaTela(dadosMensagem);
+                adicionarMensagemNaTela(dadosMsg);
                 input.value = "";
             }
         }
@@ -527,13 +471,13 @@
             const div = document.createElement("div");
             div.className = "flex items-start space-x-4 px-2 py-1 hover:bg-[#2e3035] -mx-2 rounded transition-colors";
             div.innerHTML = `
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-sm" style="background-color: ${msg.cor || '#5865f2'};">${msg.usuario.charAt(0).toUpperCase()}</div>
+                <div class="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold shrink-0 text-sm">${msg.usuario.charAt(0).toUpperCase()}</div>
                 <div>
                     <div class="flex items-baseline space-x-2">
                         <span class="font-medium text-white">${msg.usuario}</span>
                         <span class="text-xs text-[#949ba4]">${msg.horario}</span>
                     </div>
-                    <p class="text-[#dbdee1] text-sm mt-0.5 leading-relaxed">${msg.conteudo}</p>
+                    <p class="text-[#dbdee1] text-sm mt-0.5">${msg.conteudo}</p>
                 </div>
             `;
             chat.appendChild(div);
@@ -547,45 +491,6 @@
             div.innerHTML = `<span class="bg-[#2b2d31] text-[#949ba4] text-xs px-3 py-1 rounded-full">${texto}</span>`;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
-        }
-
-        function abrirModalConvite() {
-            document.getElementById("input-link-convite").value = window.location.origin + window.location.pathname + "?comunidade=" + encodeURIComponent(comunidadeAtual);
-            document.getElementById("modal-convite").classList.remove("hidden");
-        }
-        function fecharModalConvite() { document.getElementById("modal-convite").classList.add("hidden"); }
-        function copiarLinkConvite() {
-            navigator.clipboard.writeText(document.getElementById("input-link-convite").value);
-            alert("Link copiado!");
-        }
-
-        function abrirModalComunidade() { document.getElementById("modal-comunidade").classList.remove("hidden"); }
-        function fecharModalComunidade() { document.getElementById("modal-comunidade").classList.add("hidden"); }
-        function entrarNaComunidade() {
-            const nome = document.getElementById("input-nome-comunidade").value.trim();
-            if (nome) {
-                comunidadeAtual = nome;
-                fecharModalComunidade();
-                location.search = "?comunidade=" + encodeURIComponent(comunidadeAtual);
-            }
-        }
-
-        function abrirModalCriarSalaVoz() { document.getElementById("modal-voz").classList.remove("hidden"); }
-        function fecharModalCriarSalaVoz() { document.getElementById("modal-voz").classList.add("hidden"); }
-        function criarSalaVoz() {
-            const nome = document.getElementById("input-nome-voz").value.trim();
-            if (nome) {
-                fecharModalCriarSalaVoz();
-                entrarSalaVoz(nome);
-            }
-        }
-
-        function abrirConfiguracoes() { document.getElementById("modal-config").classList.remove("hidden"); }
-        function fecharConfiguracoes() { document.getElementById("modal-config").classList.add("hidden"); }
-        function salvarConfiguracoes() {
-            const nome = document.getElementById("input-novo-nome").value.trim();
-            if (nome) { perfil.nome = nome; document.getElementById("user-name").innerText = nome; }
-            fecharConfiguracoes();
         }
     </script>
 </body>
